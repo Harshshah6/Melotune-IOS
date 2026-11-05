@@ -1,0 +1,89 @@
+name: iOS Release
+
+# Builds the app and attaches a downloadable (unsigned) IPA to the GitHub release.
+#
+#   git tag v1.0.22
+#   git push origin v1.0.22
+#
+# Signing is intentionally disabled: code signing needs a private Apple certificate,
+# which is not stored in this repository. Users re-sign the IPA themselves (Xcode,
+# AltStore, Sideloadly, ...) or build from source.
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build unsigned IPA
+    # Xcode 26 / iOS 26 SDK is required for the Liquid Glass APIs.
+    # (Once `macos-latest` ships Xcode 26, that label works too.)
+    runs-on: macos-26
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify Xcode has the iOS 26 SDK
+        run: |
+          xcodebuild -version
+          if ! xcodebuild -showsdks | grep -q 'iphoneos26'; then
+            echo "::error::Xcode 26+ (iOS 26 SDK) is required — Liquid Glass APIs will not compile on older SDKs."
+            exit 1
+          fi
+
+      - name: Build (unsigned, device)
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project Melotune.xcodeproj \
+            -scheme Melotune \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - name: Package unsigned IPA
+        run: |
+          set -euo pipefail
+          APP="build/Build/Products/Release-iphoneos/Melotune.app"
+          test -d "$APP"
+
+          rm -rf Payload
+          mkdir -p Payload
+          cp -R "$APP" Payload/
+          zip -qry Melotune-unsigned.ipa Payload
+          zip -qry Melotune-unsigned-app.zip "$APP"
+
+          ls -lh Melotune-unsigned.ipa Melotune-unsigned-app.zip
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Melotune-ios
+          path: |
+            Melotune-unsigned.ipa
+            Melotune-unsigned-app.zip
+
+      - name: Attach to release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            Melotune-unsigned.ipa
+            Melotune-unsigned-app.zip
+          generate_release_notes: true
+          body: |
+            **Unsigned build** — re-sign with your own certificate (Xcode, AltStore,
+            Sideloadly, ...) to install on a device, or build from source.
+
+            Built automatically from `${{ github.ref_name }}`.
