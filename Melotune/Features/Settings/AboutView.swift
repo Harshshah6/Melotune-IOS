@@ -24,11 +24,12 @@ struct AboutView: View {
 
     private var header: some View {
         VStack(spacing: 12) {
-            Image(systemName: "music.note")
-                .font(.system(size: 40, weight: .bold))
-                .foregroundStyle(.white)
+            Image("AppLogo")
+                .resizable()
+                .aspectRatio(1, contentMode: .fit)
                 .frame(width: 92, height: 92)
-                .background(Theme.accent, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                .shadow(color: .black.opacity(0.18), radius: 8, y: 4)
 
             Text("Melotune").font(.title.weight(.bold))
             Text("Free, ad-free music streaming and offline listening. No account required.")
