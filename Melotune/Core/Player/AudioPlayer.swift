@@ -237,7 +237,12 @@ final class AudioPlayer {
                     self.isBuffering = false
                     return
                 }
-                self.load(url: url, track: first)
+                if let cached = AudioCache.shared.cachedFile(for: url) {
+                    self.load(url: cached, track: first)
+                } else {
+                    AudioCache.shared.cache(url)
+                    self.load(url: url, track: first)
+                }
                 self.recordHistory(for: first)
             } catch {
                 print("AudioPlayer: playTrack failed – \(error.localizedDescription)")

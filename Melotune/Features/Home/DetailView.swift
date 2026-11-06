@@ -133,8 +133,10 @@ struct DetailView: View {
 
             if !model.singles.isEmpty {
                 HorizontalSection(title: "Singles") {
-                    ForEach(model.singles) { single in
-                        NavigationLink(value: DetailTarget.album(id: single.id, title: single.title)) {
+                    ForEach(Array(model.singles.enumerated()), id: \.offset) { index, single in
+                        Button {
+                            player.setQueue(model.singles.map { $0.id }, startAt: index)
+                        } label: {
                             MediaCard(item: single)
                         }
                         .buttonStyle(.plain)

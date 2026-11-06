@@ -27,6 +27,8 @@ two can be versioned, built and released independently. The Android app was neve
 - Reorderable queue
 - **Synced lyrics** from LrcLib (highlight + auto-scroll + tap-to-seek)
 - Liked songs / recently played / saved playlists
+- Caching & offline: disk API response cache with offline fallback, artwork URLCache,
+  and a 300 MB audio cache so played tracks work offline (Settings → Storage to clear)
 - Settings: quality, language, downloads, theme mode, accent palette
 - About screen with links + GitHub contributors
 - Liquid Glass surfaces, with `.ultraThinMaterial` fallback below iOS 26
@@ -42,7 +44,7 @@ two can be versioned, built and released independently. The Android app was neve
 - **Verify visually with the debug launch flags**, not by tapping. The headless sandbox has
   no way to synthesise taps (`osascript` assistive access is denied). Flags:
   `-startTab N`, `-autoplayId <songId>`, `-openPlayer`, `-showLyrics`, `-openAlbum <id>`,
-  `-openAbout`. They are `#if DEBUG` and ignored in release.
+  `-openArtist <id>`, `-openAbout`, `-offlineMode`. They are `#if DEBUG` and ignored in release.
 - **A simulator only shows apps installed on that device.** `simctl install` onto the same
   device you have open, or the icon will be missing.
 - Leave the Android repo alone — this app is additive.

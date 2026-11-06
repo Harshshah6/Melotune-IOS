@@ -89,7 +89,7 @@ final class DetailViewModel {
         }
         title = data.displayName.isEmpty ? fallbackTitle : data.displayName
         image = data.artworkURL ?? ""
-        let artists = data.artist?.all?.compactMap { $0.name }.joined(separator: ", ") ?? ""
+        let artists = data.artists?.all?.compactMap { $0.name }.joined(separator: ", ") ?? ""
         subtitle = [artists, data.year.map(String.init), "\(data.songs?.count ?? 0) songs"]
             .compactMap { $0 }
             .filter { !$0.isEmpty }
@@ -120,8 +120,15 @@ final class DetailViewModel {
         image = data.artworkURL ?? ""
         subtitle = data.dominantLanguage ?? ""
         songs = (data.topSongs ?? []).map(Self.mediaItem(from:))
+        if songs.isEmpty,
+           let songsResponse = try? await ApiClient.shared.retrieveArtistSongs(
+               id, page: 0, sortBy: .popularity, sortOrder: .desc
+           ),
+           let list = songsResponse.data?.songs {
+            songs = list.map(Self.mediaItem(from:))
+        }
         albums = (data.topAlbums ?? []).compactMap(Self.mediaItem(from:))
-        singles = (data.singles ?? []).compactMap(Self.mediaItem(from:))
+        singles = (data.singles ?? []).map(Self.mediaItem(from:))
     }
 
     private static func mediaItem(from song: Song) -> MediaItemModel {

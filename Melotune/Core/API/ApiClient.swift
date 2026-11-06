@@ -181,21 +181,54 @@ final class ApiClient {
         return try await get(components.url ?? URL(string: urlString)!)
     }
 
+    /// Debug-only: `-offlineMode` serves responses from cache only, so offline behaviour
+    /// can be verified without actually cutting the network.
+    private static var isOfflineMode: Bool {
+        #if DEBUG
+        return ProcessInfo.processInfo.arguments.contains("-offlineMode")
+        #else
+        return false
+        #endif
+    }
+
     private func get<T: Decodable>(_ url: URL) async throws -> T {
+        if Self.isOfflineMode {
+            if let cached = ResponseCache.shared.data(for: url),
+               let value = try? decoder.decode(T.self, from: cached) {
+                return value
+            }
+            throw ApiError.noResponse
+        }
+
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.setValue("Melotune-iOS/1.0", forHTTPHeaderField: "User-Agent")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
 
-        let (data, response) = try await session.data(for: request)
-        guard let http = response as? HTTPURLResponse else {
-            throw ApiError.noResponse
-        }
-        guard (200..<300).contains(http.statusCode) else {
-            throw ApiError.badStatus(http.statusCode)
-        }
+        let data: Data
         do {
-            return try decoder.decode(T.self, from: data)
+            let (body, response) = try await session.data(for: request)
+            guard let http = response as? HTTPURLResponse else {
+                throw ApiError.noResponse
+            }
+            guard (200..<300).contains(http.statusCode) else {
+                throw ApiError.badStatus(http.statusCode)
+            }
+            data = body
+        } catch {
+            // Network or HTTP failure: serve the cached response so screens keep
+            // working offline (mirrors the Android cached-response fallback).
+            if let cached = ResponseCache.shared.data(for: url),
+               let value = try? decoder.decode(T.self, from: cached) {
+                return value
+            }
+            throw error
+        }
+
+        do {
+            let value = try decoder.decode(T.self, from: data)
+            ResponseCache.shared.store(data, for: url)
+            return value
         } catch {
             throw ApiError.decoding(error)
         }

@@ -119,6 +119,18 @@ Not yet ported (Android-only subsystems that need iOS equivalents):
 - **Playlist create/import/export** JSON backup (saving existing albums/playlists works).
 - **Sleep timer**, equalizer, update checker, AMOLED/Material-You dynamic colour.
 
+## Caching & offline
+
+- **API responses** are cached on disk (`Library/Caches/api-cache`) and served as a fallback
+  whenever a request fails, so browsing, search and detail screens keep working offline.
+  Mirrors the Android app's cached responses.
+- **Artwork** uses a large shared `URLCache` (64 MB memory / 256 MB disk) that persists
+  between launches.
+- **Audio** streams are also downloaded into `Library/Caches/audio-cache` (300 MB LRU) while
+  they play, so tracks that have been played work offline. This is skipped on cellular
+  connections and when "Store in cache" is off.
+- **Settings → Storage** shows the cache size and clears it.
+
 ## Liquid Glass notes
 
 `Theme.glassSurface` is the single place platform chrome is decided: it applies
@@ -139,6 +151,8 @@ screenshots and UI checks without tapping:
 | `-showLyrics` | Force the lyrics panel open (with `-openPlayer`) |
 | `-openAlbum <albumId>` | Present an album detail screen |
 | `-openAbout` | Present the About screen |
+| `-openArtist <artistId>` | Present an artist detail screen |
+| `-offlineMode` | Serve API responses from cache only (verify offline behaviour) |
 
 Example:
 

@@ -6,6 +6,10 @@ struct MelotuneApp: App {
     @State private var preferences = Preferences.shared
 
     init() {
+        // Keep artwork and network responses on disk between launches.
+        URLCache.shared = URLCache(memoryCapacity: 64 * 1024 * 1024, diskCapacity: 256 * 1024 * 1024)
+        _ = NetworkMonitor.shared
+
         #if DEBUG
         // Debug-only: `-autoplayDemo` (or `-autoplayId <songId>`) starts a track so the
         // player UI can be inspected without tapping. Ignored in release builds.

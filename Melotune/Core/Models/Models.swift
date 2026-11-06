@@ -119,7 +119,7 @@ struct AlbumsSearch: Codable {
         let playCount: Int?
         let language: String?
         let explicitContent: Bool?
-        let artist: ArtistSet?
+        let artists: ArtistSet?
         let image: [JImage]?
 
         var displayName: String { HtmlText.parse(name) }
@@ -140,7 +140,7 @@ struct AlbumSearch: Codable {
         let playCount: Int?
         let language: String?
         let explicitContent: Bool?
-        let artist: ArtistSet?
+        let artists: ArtistSet?
         let image: [JImage]?
         let songs: [Song]?
 
@@ -192,7 +192,7 @@ struct ArtistSearch: Codable {
         let image: [JImage]?
         let topSongs: [Song]?
         let topAlbums: [AlbumsSearch.Result]?
-        let singles: [AlbumsSearch.Result]?
+        let singles: [Song]?
         let similarArtists: [SimilarArtist]?
 
         var displayName: String { HtmlText.parse(name) }

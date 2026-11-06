@@ -10,6 +10,8 @@ struct RootView: View {
     @State private var debugAlbumId = RootView.launchValue("-openAlbum")
     @State private var showDebugAlbum = RootView.launchValue("-openAlbum") != nil
     @State private var showDebugAbout = RootView.hasLaunchFlag("-openAbout")
+    @State private var debugArtistId = RootView.launchValue("-openArtist")
+    @State private var showDebugArtist = RootView.launchValue("-openArtist") != nil
 
     private static func hasLaunchFlag(_ flag: String) -> Bool {
         #if DEBUG
@@ -67,6 +69,11 @@ struct RootView: View {
         }
         .sheet(isPresented: $showDebugAbout) {
             NavigationStack { AboutView() }
+        }
+        .sheet(isPresented: $showDebugArtist) {
+            if let id = debugArtistId {
+                NavigationStack { DetailView(target: .artist(id: id, title: "Artist")) }
+            }
         }
     }
 

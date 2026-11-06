@@ -5,6 +5,7 @@ import SwiftUI
 /// theme mode and accent palette.
 struct SettingsView: View {
     @Environment(Preferences.self) private var prefs
+    @State private var cacheSize: Int64 = 0
 
     private let qualities = ["320kbps", "160kbps", "96kbps", "48kbps", "12kbps"]
     private let formats = ["mp3", "m4a", "ogg"]
@@ -58,6 +59,16 @@ struct SettingsView: View {
                     }
                 }
 
+                Section("Storage") {
+                    LabeledContent("Offline cache", value: cacheSizeText)
+                    Button("Clear cache") {
+                        ResponseCache.shared.clear()
+                        AudioCache.shared.clear()
+                        URLCache.shared.removeAllCachedResponses()
+                        cacheSize = 0
+                    }
+                }
+
                 Section {
                     NavigationLink {
                         AboutView()
@@ -68,6 +79,13 @@ struct SettingsView: View {
             }
             .withMiniPlayer()
             .navigationTitle("Settings")
+            .onAppear {
+                cacheSize = ResponseCache.shared.sizeInBytes() + AudioCache.shared.sizeInBytes()
+            }
         }
+    }
+
+    private var cacheSizeText: String {
+        ByteCountFormatter.string(fromByteCount: cacheSize, countStyle: .file)
     }
 }
